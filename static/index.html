@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="id">
+    <head>
+        <meta charset="UTF-8" />
+        <title>Simulasi QRIS & Saldo Mahasiswa</title>
+        <script defer src="js/app.js"></script>
+        <style>
+            body {
+                font-family: sans-serif;
+                margin: 20px;
+            }
+            .box {
+                padding: 20px;
+                border: 1px solid #ddd;
+                border-radius: 10px;
+                margin-bottom: 20px;
+            }
+            img {
+                max-width: 200px;
+                margin-top: 10px;
+            }
+            input,
+            button {
+                padding: 8px;
+                margin-top: 10px;
+            }
+        </style>
+    </head>
+    <body>
+        <h1>Simulasi Transaksi Mahasiswa</h1>
+
+        <div class="box">
+            <h3>Top Up Saldo via QRIS</h3>
+            <input
+                type="number"
+                id="topup-amount"
+                placeholder="Jumlah top up"
+            />
+            <button onclick="topupSaldo()">Top Up</button>
+            <div id="qris-topup"></div>
+        </div>
+
+        <div class="box">
+            <h3>Beli Produk</h3>
+            <input type="number" id="produk-id" placeholder="ID Produk" />
+            <input type="number" id="jumlah" placeholder="Jumlah" />
+            <button onclick="beliProduk()">Beli</button>
+            <div id="qris-transaksi"></div>
+        </div>
+    </body>
+</html>
