@@ -7,7 +7,7 @@ import os
 
 load_dotenv()
 
-SECRET_KEY = os.getenv("JWT_SECRET")
+SECRET_KEY = os.getenv("JWT_SECRET") 
 ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
 
 

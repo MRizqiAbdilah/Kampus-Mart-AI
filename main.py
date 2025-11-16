@@ -99,7 +99,7 @@ async def root():
 
 
 if __name__ == "__main__":
-    port = os.environ.get("PORT")
+    port = int(os.environ.get("PORT"))
     if not port:
         raise EnvironmentError("PORT environment variable is not set")
     uvicorn.run("main:app", host="127.0.0.1", port=port, reload=True)
