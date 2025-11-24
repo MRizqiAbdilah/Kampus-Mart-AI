@@ -1,14 +1,22 @@
 from pydantic import BaseModel, EmailStr
+from typing import Optional
+from datetime import date
 
 class RegisterMahasiswa(BaseModel):
     nama: str
+    username: str
     nim: str
     email: EmailStr
     password: str
-    jurusan: str | None = None
+
+    # 🔥 Tambahan baru (opsional)
+    tahun_masuk: Optional[int] = 2025
+    alamat: Optional[str] = None
+    tanggal_lahir: Optional[date] = None
+
 
 class LoginMahasiswa(BaseModel):
-    email: EmailStr
+    identifier: str
     password: str
 
 class Token(BaseModel):

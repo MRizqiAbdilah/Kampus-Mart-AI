@@ -20,5 +20,4 @@ def get_current_user(request: Request, db: Session = Depends(get_db)):
         "nama": user.nama,
         "nim": user.nim,
         "email": user.email,
-        "jurusan": user.jurusan
     }

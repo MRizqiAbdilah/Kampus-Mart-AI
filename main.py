@@ -7,6 +7,7 @@ from fastapi.openapi.utils import get_openapi  # ✅ Tambahkan ini
 from fastapi.security import HTTPBearer
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy import text
+import models  # ← otomatis load semua tabel
 
 # ✅ Tambahkan skema security untuk Swagger UI
 from database.base import Base
@@ -19,6 +20,8 @@ from routes.qris_route import router as qris_router
 from routes.saldo_route import router as saldo_router
 from routes.transaksi_route import router as transaksi_router
 from routes.user_route import router as user_router
+from routes.kelas_route import router as kelas_router
+from routes.matakuliah_route import router as matakuliah_router
 
 # Load environment variables
 load_dotenv()
@@ -66,10 +69,12 @@ app.add_middleware(AuthMiddleware)
 
 
 # Setelah inisialisasi app
+app.include_router(auth_router)
+app.include_router(kelas_router)
+app.include_router(matakuliah_router)
 app.include_router(mahasiswa_router)
 app.include_router(produk_router)
 app.include_router(transaksi_router)
-app.include_router(auth_router)
 app.include_router(user_router)
 app.include_router(qris_router)
 app.include_router(saldo_router)
