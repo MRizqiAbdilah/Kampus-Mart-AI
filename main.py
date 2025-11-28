@@ -8,6 +8,7 @@ from fastapi.security import HTTPBearer
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy import text
 import models  # ← otomatis load semua tabel
+from contextlib import asynccontextmanager
 
 # ✅ Tambahkan skema security untuk Swagger UI
 from database.base import Base
@@ -23,16 +24,28 @@ from routes.user_route import router as user_router
 from routes.kelas_route import router as kelas_router
 from routes.matakuliah_route import router as matakuliah_router
 
+PORT:int = int(os.environ.get("PORT") or 8000)
 # Load environment variables
 load_dotenv()
+
+@asynccontextmanager
+async def lifespan(app:FastAPI):
+    try:
+        with engine.connect() as connection:
+            connection.execute(text("SELECT 1"))
+        print("✅ Database connected successfully.")
+        yield
+    except Exception as e:
+        print(f"❌ Failed to connect to the database: {e}")
+        raise SystemExit("Database connection failed — exiting app.")
 
 # Initialize FastAPI app
 app = FastAPI(
     title="Kampus Mart",
     version="1.0.1",
     description="API documentation for Kampus Mart, Menjual aneka produk yang sangat-sangat enak dan bergizi banget",
+    lifespan=lifespan
 )
-
 
 security_scheme = HTTPBearer()
 
@@ -84,27 +97,10 @@ app.mount("/", StaticFiles(directory="static", html=True), name="static")
 # Create database tables on startup
 Base.metadata.create_all(bind=engine)
 
-
-# ---- Cek koneksi database ----
-@app.on_event("startup")
-async def startup_event():
-    try:
-        with engine.connect() as connection:
-            connection.execute(text("SELECT 1"))
-        print("✅ Database connected successfully.")
-    except Exception as e:
-        print(f"❌ Failed to connect to the database: {e}")
-        raise SystemExit("Database connection failed — exiting app.")
-
-
 # Root endpoint
 @app.get("/")
 async def root():
     return {"message": "Welcome to FastAPI Store"}
 
-
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT"))
-    if not port:
-        raise EnvironmentError("PORT environment variable is not set")
-    uvicorn.run("main:app", host="127.0.0.1", port=port, reload=True)
+    uvicorn.run("main:app", host="127.0.0.1", port=PORT, reload=True)
