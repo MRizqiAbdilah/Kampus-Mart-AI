@@ -33,25 +33,6 @@ def create_mahasiswa(mahasiswa: MahasiswaCreate, db: Session = Depends(get_db)):
     # 1. BUAT OBJEK MAHASISWA TANPA RELASI DULU
     new_mhs = Mahasiswa(**data)
 
-    # 2. SET KELAS (ONE-TO-MANY)
-    if mahasiswa.kelas is not None:
-        kelas_obj = db.query(Kelas).filter(Kelas.id == mahasiswa.kelas).first()
-        if not kelas_obj:
-            raise HTTPException(status_code=404, detail="Kelas tidak ditemukan")
-
-        new_mhs.kelas = kelas_obj  # <-- RELASI BUTUH OBJECT
-
-    # 3. SET MATAKULIAH (MANY-TO-MANY)
-    if mahasiswa.matakuliah:
-        mk_list = []
-        for mk in mahasiswa.matakuliah:
-            mk_obj = db.query(Matakuliah).filter(Matakuliah.id == mk.id).first()
-            if not mk_obj:
-                raise HTTPException(status_code=404, detail=f"Matakuliah id {mk.id} tidak ditemukan")
-            mk_list.append(mk_obj)
-
-        new_mhs.matakuliah = mk_list  # <-- harus object ORM
-
     db.add(new_mhs)
     db.commit()
     db.refresh(new_mhs)

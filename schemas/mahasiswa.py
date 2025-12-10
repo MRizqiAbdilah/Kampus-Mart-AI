@@ -46,8 +46,8 @@ class MahasiswaCreate(BaseModel):
     tanggal_lahir: Optional[date] = None
 
     # RELASI
-    kelas: Optional[int] = None                # ID kelas
-    matakuliah: List[MatakuliahBase] = Field(default_factory=list)
+    # kelas: Optional[int] = None                # ID kelas
+    # matakuliah: List[MatakuliahBase] = Field(default_factory=list)
 
     class Config:
         from_attributes = True
