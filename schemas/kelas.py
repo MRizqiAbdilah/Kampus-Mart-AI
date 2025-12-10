@@ -11,10 +11,13 @@ class KelasCreate(KelasBase):
     nama: str
 
 class KelasResponse(BaseModel):
-    id: int
+    id: int 
     nama: str
     jumlah_mahasiswa: int
     mahasiswa: List[str]
 
     class Config:
         from_attributes = True
+
+class KelasUpdate(BaseModel):
+    nama: str
