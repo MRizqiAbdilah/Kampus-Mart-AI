@@ -5,7 +5,7 @@ from datetime import date
 class RegisterMahasiswa(BaseModel):
     nama: str
     username: str
-    nim: str
+    nim: int
     email: EmailStr
     password: str
 

@@ -17,11 +17,16 @@ router = APIRouter(prefix="/auth", tags=["Auth"])
 def register_user(data: RegisterMahasiswa, db: Session = Depends(get_db)):
     existing_email = db.query(Mahasiswa).filter(Mahasiswa.email == data.email).first()
     existing_username = db.query(Mahasiswa).filter(Mahasiswa.username == data.username).first()
+    existing_nim = db.query(Mahasiswa).filter(Mahasiswa.nim == data.nim).first()
+
     if existing_email:
         raise HTTPException(status_code=400, detail="Email already registered")
 
     if existing_username:
         raise HTTPException(status_code=400, detail="Username already registered")
+
+    if existing_nim:
+        raise HTTPException(status_code=400, detail="Nim already registered")
 
     hashed_pw = hash_password(data.password)
     new_user = Mahasiswa(
@@ -52,7 +57,7 @@ def login_user(data: LoginMahasiswa, db: Session = Depends(get_db)):
         )
     ).first()
 
-    if not user or not verify_password(data.password, user.password_hash):
+    if not user or not verify_password(data.password, str(user.password_hash)):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid credentials"

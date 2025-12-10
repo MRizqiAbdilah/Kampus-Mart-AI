@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-DATABASE_URL = os.getenv("DATABASE_URL")
+DATABASE_URL:str = os.getenv("DATABASE_URL") or ""
 """
 The engine manages the connection to the database and handles query execution.
 """

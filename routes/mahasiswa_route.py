@@ -13,7 +13,7 @@ router = APIRouter(prefix="/mahasiswa", tags=["Mahasiswa"])
 # CREATE MAHASISWA
 # -------------------------------------------------------------------
 
-@router.post("/", response_model=MahasiswaResponse)
+@router.post("/", response_model=MahasiswaCreate)
 def create_mahasiswa(mahasiswa: MahasiswaCreate, db: Session = Depends(get_db)):
 
     # CEK USERNAME DUPLIKAT
@@ -28,9 +28,30 @@ def create_mahasiswa(mahasiswa: MahasiswaCreate, db: Session = Depends(get_db)):
     if db.query(Mahasiswa).filter(Mahasiswa.nim == mahasiswa.nim).first():
         raise HTTPException(status_code=400, detail=f"NIM '{mahasiswa.nim}' sudah digunakan")
 
-    # cek kelas
+    data = mahasiswa.model_dump(exclude={"kelas", "matakuliah"})
 
-    new_mhs = Mahasiswa(**mahasiswa.dict())
+    # 1. BUAT OBJEK MAHASISWA TANPA RELASI DULU
+    new_mhs = Mahasiswa(**data)
+
+    # 2. SET KELAS (ONE-TO-MANY)
+    if mahasiswa.kelas is not None:
+        kelas_obj = db.query(Kelas).filter(Kelas.id == mahasiswa.kelas).first()
+        if not kelas_obj:
+            raise HTTPException(status_code=404, detail="Kelas tidak ditemukan")
+
+        new_mhs.kelas = kelas_obj  # <-- RELASI BUTUH OBJECT
+
+    # 3. SET MATAKULIAH (MANY-TO-MANY)
+    if mahasiswa.matakuliah:
+        mk_list = []
+        for mk in mahasiswa.matakuliah:
+            mk_obj = db.query(Matakuliah).filter(Matakuliah.id == mk.id).first()
+            if not mk_obj:
+                raise HTTPException(status_code=404, detail=f"Matakuliah id {mk.id} tidak ditemukan")
+            mk_list.append(mk_obj)
+
+        new_mhs.matakuliah = mk_list  # <-- harus object ORM
+
     db.add(new_mhs)
     db.commit()
     db.refresh(new_mhs)
@@ -42,7 +63,7 @@ def create_mahasiswa(mahasiswa: MahasiswaCreate, db: Session = Depends(get_db)):
 # GET ALL MAHASISWA
 # -------------------------------------------------------------------
 
-@router.get("/", response_model=List[MahasiswaBase])
+@router.get("/", response_model=List[MahasiswaResponse])
 def get_all_mahasiswa(db: Session = Depends(get_db)):
     mahasiswa_list = db.query(Mahasiswa).all()
 
@@ -55,32 +76,37 @@ def get_all_mahasiswa(db: Session = Depends(get_db)):
             "email": mhs.email,
             "nim": mhs.nim,
             "semester": mhs.semester,
+            "saldo": mhs.saldo,  # 🔥 FIX WAJIB
 
-            # 🔥 FIELD BARU
+            # FIELD BARU
             "tahun_masuk": mhs.tahun_masuk,
             "alamat": mhs.alamat,
             "tanggal_lahir": mhs.tanggal_lahir,
 
-            "kelas": mhs.kelas.nama if mhs.kelas else None,
-
-            # "kelas": None if not mhs.kelas else {
-            #     "id": mhs.kelas.id,
-            #     "nama": mhs.kelas.nama,
-            #     "jumlah_mahasiswa": len(mhs.kelas.mahasiswa),
-            #     "mahasiswa": [x.nama for x in mhs.kelas.mahasiswa]
-            # },
+            "kelas": None if not mhs.kelas else {
+                "id": mhs.kelas.id,
+                "nama": mhs.kelas.nama,
+                "jumlah_mahasiswa": len(mhs.kelas.mahasiswa),
+                "mahasiswa": [x.nama for x in mhs.kelas.mahasiswa]
+            },
 
             "matakuliah": [
                 {
+                    "id": mk.id,
                     "nama": mk.nama,
                     "sks": mk.sks,
+                    # opsional:
+                    "jumlah_mahasiswa": len(mk.mahasiswa),
+                    "mahasiswa": [x.username for x in mk.mahasiswa]
                 }
                 for mk in mhs.matakuliah
             ],
+
             "total_sks": sum([mk.sks for mk in mhs.matakuliah])
         })
 
     return result
+
 
 
 # -------------------------------------------------------------------
@@ -159,9 +185,33 @@ def set_kelas(mahasiswa_id: int, kelas_id: int, db: Session = Depends(get_db)):
 
     mhs.kelas_id = kelas_id
     db.commit()
+    db.refresh(mhs)
 
     return {"message": "Kelas berhasil ditambahkan ke mahasiswa"}
 
+
+@router.delete("/{mahasiswa_id}/kelas/{kelas_id}")
+def delete_kelas(mahasiswa_id: int, kelas_id: int, db: Session = Depends(get_db)):
+    # Cek mahasiswa
+    mhs = db.query(Mahasiswa).filter(Mahasiswa.id == mahasiswa_id).first()
+    if not mhs:
+        raise HTTPException(status_code=404, detail="Mahasiswa not found")
+
+    # Cek matakuliah
+    kelas = db.query(Kelas).filter(Kelas.id == kelas_id).first()
+    if not kelas:
+        raise HTTPException(status_code=404, detail="Kelas not found")
+
+    # Hapus
+    mhs.kelas = None
+    db.commit()
+    db.refresh(mhs)
+
+    return {
+        "message": "Kelas berhasil dihapus",
+        "mahasiswa_id": mahasiswa_id,
+        "status": "Kelas Berhasil DIhapus"
+    }
 
 # -------------------------------------------------------------------
 # AMBIL MATAKULIAH
@@ -253,7 +303,7 @@ def update_mahasiswa(mahasiswa_id: int, data_update: MahasiswaUpdate, db: Sessio
             raise HTTPException(status_code=400, detail="NIM sudah digunakan")
 
     # UPDATE HANYA YANG DIKIRIM
-    update_data = data_update.dict(exclude_unset=True)
+    update_data = data_update.model_dump(exclude_unset=True)
 
     # Tangani kelas_id
     if "kelas_id" in update_data:
@@ -268,6 +318,7 @@ def update_mahasiswa(mahasiswa_id: int, data_update: MahasiswaUpdate, db: Sessio
     db.refresh(mhs)
     if not update_data:
         raise HTTPException(status_code=400, detail="Tidak ada data yang diubah")
+        
     # RETURN HANYA FIELD YANG DIUBAH
     return {
         "id": mhs.id,

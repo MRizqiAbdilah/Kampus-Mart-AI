@@ -2,17 +2,19 @@ from pydantic import BaseModel
 from typing import List, Optional
 
 class MatakuliahBase(BaseModel):
+    id: int
     nama: str
     sks: Optional[int] = None
 
-class MatakuliahCreate(MatakuliahBase):
+class MatakuliahCreate(BaseModel):
     nama: str
-    sks: int = 2
+    sks: Optional[int] = 2
 
-class MatakuliahResponse(MatakuliahBase):
-    id:int
-    jumlah_mahasiswa: int
-    mahasiswa: List[str]  # ← LIST NAMA
+
+class MatakuliahResponse(BaseModel):
+    id: int
+    nama: str
+    sks: int
 
     class Config:
         from_attributes = True

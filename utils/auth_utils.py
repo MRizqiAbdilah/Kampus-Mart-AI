@@ -7,8 +7,8 @@ import os
 
 load_dotenv()
 
-SECRET_KEY = os.getenv("JWT_SECRET") 
-ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
+SECRET_KEY:str = os.getenv("JWT_SECRET") or ""
+ALGORITHM:str = os.getenv("JWT_ALGORITHM", "HS256") or ""
 
 
 ACCESS_TOKEN_EXPIRE_MINUTES = 60

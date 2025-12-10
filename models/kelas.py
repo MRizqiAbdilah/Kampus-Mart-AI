@@ -1,11 +1,16 @@
-from sqlalchemy import Column, Integer, String
-from sqlalchemy.orm import relationship
+from sqlalchemy import String, Integer
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from database.base import Base
+
 
 class Kelas(Base):
     __tablename__ = "kelas"
 
-    id = Column(Integer, primary_key=True)
-    nama = Column(String, nullable=False)
+    id: Mapped[int] = mapped_column(primary_key=True)
+    nama: Mapped[str] = mapped_column(String, nullable=False)
 
-    mahasiswa = relationship("Mahasiswa", back_populates="kelas")
+    # One-to-Many → satu kelas banyak mahasiswa
+    mahasiswa: Mapped[list["Mahasiswa"]] = relationship(
+        back_populates="kelas",
+        lazy="selectin"   # 🔥 agar list mahasiswa otomatis di-load
+    )

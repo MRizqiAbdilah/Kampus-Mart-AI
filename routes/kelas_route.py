@@ -24,7 +24,7 @@ def get_all_kelas(db: Session = Depends(get_db)):
         KelasResponse(
             id=k.id,
             nama=k.nama,
-            jumlah_mahasiswa=len(k.mahasiswa),
+            jumlah_mahasiswa=len(k.mahasiswa), #type: ignore
             mahasiswa=[m.nama for m in k.mahasiswa]  # <-- tampilkan nama
         )
         for k in kelas_list
@@ -40,7 +40,7 @@ def get_kelas(kelas_id: int, db: Session = Depends(get_db)):
     return KelasResponse(
         id=kelas.id,
         nama=kelas.nama,
-        jumlah_mahasiswa=len(kelas.mahasiswa),
+        jumlah_mahasiswa=len(kelas.mahasiswa), #type: ignore
         mahasiswa=[m.nama for m in kelas.mahasiswa]
     )
 
